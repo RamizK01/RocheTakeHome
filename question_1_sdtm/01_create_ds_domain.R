@@ -60,4 +60,18 @@ ds <- assign_no_ct(
     raw_var = c('DSDTCOL', 'DSTMCOL'),
     tgt_var = 'DSDTC',
     raw_fmt = c('m-d-y', 'H:M'),
+  ) |>
+  # Create VISIT
+  assign_no_ct(
+    raw_dat = raw_ds,
+    raw_var = 'INSTANCE',
+    tgt_var = 'VISIT'
+  ) |>
+  # Map VISITNUM
+  assign_ct(
+    raw_dat = raw_ds,
+    raw_var = 'INSTANCE',
+    tgt_var = 'VISITNUM',
+    ct_spec = ct,
+    ct_clst = 'VISITNUM' # Use CT for VISITNUM mapping
   )
