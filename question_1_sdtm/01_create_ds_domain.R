@@ -5,6 +5,10 @@
 # Author : Ramiz Khan
 # Date   : February 9, 2026
 
+# Create log file for output
+source('utils.R')
+log_file <- start_log(log_dir = 'question_1_sdtm', prefix = 'q1_log')
+
 ### Libraries & Pre-Processing ###
 message('Loading in Libraries and Data')
 library(sdtm.oak)
@@ -161,4 +165,8 @@ if (nrow(ds_raw) != nrow(ds)) {
 }
 
 message("All required columns exist and row counts match.")
+
+save_rds(ds, save_dir = 'question_1_sdtm', prefix = 'DS')
+
+stop_log()
   
