@@ -159,7 +159,7 @@ adsl <- adsl |>
 # Quick QC check 
 required_cols <- c(
   "AGEGR9", "AGEGR9N", "TRTSDTM", "TRTSTMF",
-  "TRTEDTM", "TRTEDMF", "ITTFL", "LSTAVLDT"
+  "TRTEDTM", "TRTETMF", "ITTFL", "LSTAVLDT"
 )
 
 missing_cols <- setdiff(required_cols, names(adsl))
