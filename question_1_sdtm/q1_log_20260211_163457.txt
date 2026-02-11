@@ -1,0 +1,13 @@
+
+==============================
+Log started: 2026-02-11 16:34:57 
+==============================
+
+G3;Loading in Libraries and Data
+gG3;Pre-processing raw disposition data
+gG3;Begin mapping DS columns
+gG3;ℹ These terms could not be mapped per the controlled terminology: "Randomized", "Completed", "Study Terminated by Sponsor", "Screen Failure", and "Lost to Follow-Up".
+gG3;ℹ These terms could not be mapped per the controlled terminology: "Ambul Ecg Removal", "Unscheduled 6.1", "Unscheduled 1.1", "Unscheduled 5.1", "Unscheduled 4.1", "Unscheduled 8.2", and "Unscheduled 13.1".
+gG3;All required columns exist and row counts match.
+gSaved R object to: question_1_sdtm/DS_20260211_163515.Rds 
+[1] "question_1_sdtm/DS_20260211_163515.Rds"
