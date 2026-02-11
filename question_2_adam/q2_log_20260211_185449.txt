@@ -1,0 +1,113 @@
+
+==============================
+Log started: 2026-02-11 18:54:49 
+==============================
+
+
+> ### Libraries & Pre-Processing ###
+> message('Loading in Libraries and Data')
+G3;Loading in Libraries and Data
+g
+> library(admiral)
+
+> library(pharmaversesdtm)
+
+> library(dplyr, warn.conflicts = FALSE)
+
+> library(lubridate)
+G3;
+Attaching package: ‘lubridate’
+
+gG3;The following objects are masked from ‘package:base’:
+
+    date, intersect, setdiff, union
+
+g
+> library(stringr)
+
+> dm <- pharmaversesdtm::dm
+
+> vs <- pharmaversesdtm::vs
+
+> ex <- pharmaversesdtm::ex
+
+> ds <- pharmaversesdtm::ds
+
+> ae <- pharmaversesdtm::ae 
+
+> dm <- convert_blanks_to_na(dm)
+
+> ds <- convert_blanks_to_na(ds)
+
+> ex <- convert_blanks_to_na(ex)
+
+> ae <- convert_blanks_to_na(ae)
+
+> lb <- convert_blanks_to_na(lb)
+
+> message('Create ADSL')
+G3;Create ADSL
+g
+> adsl <- dm |>
++   select(-DOMAIN)
+
+> # Check to ensure ADSL is ORPP (One row per patient)
+> stopifnot(nrow(adsl) == length(unique(adsl$USUBJID)))
+
+> message('Mapping basic vars')
+G3;Mapping basic vars
+g
+> adsl <- adsl |>
++   mutate(
++     AGEGR9N = case_when(
++       AGE < 18 ~ 1,
++       AGE <= 50 ~ 2,
++       TRUE ~ 3
++     ),
++     AGEGR9 = c('<18' .... [TRUNCATED] 
+
+> message('Deriving Exposure Start/End')
+G3;Deriving Exposure Start/End
+g
+> ex_dtm <- ex |>
++   derive_vars_dtm(
++     dtc = EXSTDTC,
++     new_vars_prefix = 'EXST'
++   ) |>
++   derive_vars_dtm(
++     dtc = EXENDTC,
++     ne .... [TRUNCATED] 
+
+> adsl <- adsl |>
++   derive_vars_merged(
++     dataset_add = ex_dtm,
++     # Add filters to ensure that valid start date is present and that the requ .... [TRUNCATED] 
+
+> message('Derive Last Alive Timepoint')
+G3;Derive Last Alive Timepoint
+g
+> # Derive in seperate step so we can bring in TRTEDTM from adsl for the LSTAVLDT
+> adsl <- adsl |>
++   derive_vars_extreme_event(
++     by_vars = exp .... [TRUNCATED] 
+
+> # Quick QC check 
+> required_cols <- c(
++   "AGEGR9", "AGEGR9N", "TRTSDTM", "TRTSTMF",
++   "TRTEDTM", "TRTETMF", "ITTFL", "LSTAVLDT"
++ )
+
+> missing_cols <- setdiff(required_cols, names(adsl))
+
+> if (length(missing_cols) > 0) {
++   stop("Missing required columns: ", paste(missing_cols, collapse = ", "))
++ }
+
+> stopifnot(nrow(dm) == nrow(adsl))
+
+> # Finalize work and save
+> save_rds(adsl, save_dir = 'question_2_adam', prefix = 'ADSL')
+Saved R object to: question_2_adam/ADSL_20260211_185452.Rds 
+[1] "question_2_adam/ADSL_20260211_185452.Rds"
+
+> stop_log()
