@@ -7,7 +7,7 @@
 
 # Create log file for output
 source('utils.R')
-log_file <- start_log(log_dir = 'question_1_sdtm', prefix = 'q1_log')
+log_file <- start_log(log_dir = 'question_2_adam', prefix = 'q2_log')
 
 ### Libraries & Pre-Processing ###
 message('Loading in Libraries and Data')
@@ -29,12 +29,14 @@ ex <- convert_blanks_to_na(ex)
 ae <- convert_blanks_to_na(ae)
 lb <- convert_blanks_to_na(lb)
 
+message('Create ADSL')
 adsl <- dm |>
   select(-DOMAIN)
 
 # Check to ensure ADSL is ORPP (One row per patient)
 stopifnot(nrow(adsl) == length(unique(adsl$USUBJID)))
 
+message('Mapping basic vars')
 adsl <- adsl |>
   mutate(
     AGEGR9N = case_when(
@@ -45,6 +47,7 @@ adsl <- adsl |>
     AGEGR9 = c('<18', '18 - 50', '>50')[AGEGR9N]
   ) 
 
+message('Deriving Exposure Start/End')
 ex_dtm <- ex |>
   derive_vars_dtm(
     dtc = EXSTDTC,
@@ -90,8 +93,9 @@ adsl <- adsl |>
     condition = (!is.na(ARM))
   ) 
 
+message('Derive Last Alive Timepoint')
 # Derive in seperate step so we can bring in TRTEDTM from adsl for the LSTAVLDT
-asdl <- adsl |>
+adsl <- adsl |>
   derive_vars_extreme_event(
     by_vars = exprs(STUDYID, USUBJID),
     events = list(
@@ -100,27 +104,27 @@ asdl <- adsl |>
         order = exprs(VSDTC, VSSEQ),
         condition = !is.na(VSDTC) & (!is.na(VSSTRESN) & !is.na(VSSTRESC)),
         set_values_to = exprs(
-          LSTAVLDT = convert_dtc_to_dt(VSDTC, highest_imputation = 'M'),
+          LSTAVLDT = convert_dtc_to_dt(VSDTC),
           seq = VSSEQ
-        ),
+        )
       ),
       event(
         dataset_name = 'ae',
         order = exprs(AESTDTC, AESEQ),
         condition = !is.na(AESTDTC),
         set_values_to = exprs(
-          LSTAVLDT = convert_dtc_to_dt(AESTDTC, highest_imputation = 'M'),
+          LSTAVLDT = convert_dtc_to_dt(AESTDTC),
           seq = AESEQ
-        ),
+        )
       ),
       event(
         dataset_name = 'ds',
         order = exprs(DSSTDTC, DSSEQ),
         condition = !is.na(DSSTDTC),
         set_values_to = exprs(
-          LSTAVLDT = convert_dtc_to_dt(DSSTDTC, highest_imputation = "M"),
+          LSTAVLDT = convert_dtc_to_dt(DSSTDTC),
           seq = DSSEQ
-        ),
+        )
       ),
       event(
         dataset_name = "adsl",
@@ -128,7 +132,7 @@ asdl <- adsl |>
         set_values_to = exprs(
           LSTAVLDT = TRTEDTM,
           seq = 0
-          ),
+          )
       )
     ),
     source_datasets = list(vs = vs, ae = ae, ds = ds, adsl = adsl),
@@ -136,9 +140,36 @@ asdl <- adsl |>
     order = exprs(LSTAVLDT, seq, event_nr),
     mode = "last",
     new_vars = exprs(LSTAVLDT)
-  ) # Note that the spelling of the variable LSTAVLDT is incorrect, the programming 
+  ) |>
+    # Note that the spelling of the variable LSTAVLDT is incorrect, the programming 
     # assignment provided by roche has it listed as "LSTAVLDT" despite CDISC standards
     # having it as "LSTALVDT", ultimately i followed the assingment worksheet in naming
     # but in an actual study this is a huge data quality issue if the specs are mis-spelled
-  
+  labelled::set_variable_labels(
+    AGEGR9    = "Age Group 9",
+    AGEGR9N   = "Age Group 9 (N)",
+    TRTSDTM   = "Datetime of First Exposure to Treatment",
+    TRTSTMF   = "Time of First Exposure Imputation Flag",
+    TRTEDTM   = "Datetime of Last Exposure to Treatment",
+    TRTEDMF   = "Time of Last Exposure Imputation Flag",
+    ITTFL     = "Intent-To-Treat Population Flag",
+    LSTAVLDT  = "Date Last Known Alive"
+  )
+
+# Quick QC check 
+required_cols <- c(
+  "AGEGR9", "AGEGR9N", "TRTSDTM", "TRTSTMF",
+  "TRTEDTM", "TRTEDMF", "ITTFL", "LSTAVLDT"
+)
+
+missing_cols <- setdiff(required_cols, names(adsl))
+if (length(missing_cols) > 0) {
+  stop("Missing required columns: ", paste(missing_cols, collapse = ", "))
+}
+
+stopifnot(nrow(dm) == nrow(adsl))
+
+# Finalize work and save
+save_rds(ds, save_dir = 'question_2_adam', prefix = 'ADSL')
+stop_log()
   
