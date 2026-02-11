@@ -49,6 +49,11 @@ ex_dtm <- ex |>
   derive_vars_dtm(
     dtc = EXSTDTC,
     new_vars_prefix = 'EXST'
+  ) |>
+  derive_vars_dtm(
+    dtc = EXENDTC,
+    new_vars_prefix = "EXEN",
+    time_imputation = "last"
   )
 
 adsl <- adsl |>
@@ -59,9 +64,81 @@ adsl <- adsl |>
     # no need for "contains" placebo since EXTRT is only coded as either PLACEBO or the IP
     # check if flag for imputation not equal to H, then do not derive population flag
     filter_add = !is.na(EXSTDTC) & (EXDOSE > 0 | (EXDOSE == 0 & EXTRT == 'PLACEBO') & EXSTTMF == 'H'), 
+    # Create dt var and flag
     new_vars = exprs(TRTSDTM = EXSTDTM, TRTSTMF = EXSTTMF),
     order = exprs(EXSTDTM, EXSEQ),
+    # Choose first (earliest) record
     mode = "first",
+    # grouping vars
     by_vars = exprs(STUDYID, USUBJID)
-  )
+  ) |> 
+  # While not required by the assignment, TRTEDTM is required downstream to map
+  # variable LSTAVLDT 
+  derive_vars_merged(
+    dataset_add = ex_dtm,
+    filter_add = !is.na(EXSTDTC) & (EXDOSE > 0 | (EXDOSE == 0 & EXTRT == 'PLACEBO') & EXSTTMF == 'H'),
+    new_vars = exprs(TRTEDTM = EXENDTM, TRTETMF = EXENTMF),
+    order = exprs(EXENDTM, EXSEQ),
+    mode = "last",
+    by_vars = exprs(STUDYID, USUBJID)
+  ) |>
+  derive_var_merged_exist_flag(
+    dataset_add = dm,
+    by_vars = exprs(STUDYID, USUBJID),
+    new_var = ITTFL,
+    missing_value = 'N',
+    condition = (!is.na(ARM))
+  ) 
+
+# Derive in seperate step so we can bring in TRTEDTM from adsl for the LSTAVLDT
+asdl <- adsl |>
+  derive_vars_extreme_event(
+    by_vars = exprs(STUDYID, USUBJID),
+    events = list(
+      event(
+        dataset_name = 'vs',
+        order = exprs(VSDTC, VSSEQ),
+        condition = !is.na(VSDTC) & (!is.na(VSSTRESN) & !is.na(VSSTRESC)),
+        set_values_to = exprs(
+          LSTAVLDT = convert_dtc_to_dt(VSDTC, highest_imputation = 'M'),
+          seq = VSSEQ
+        ),
+      ),
+      event(
+        dataset_name = 'ae',
+        order = exprs(AESTDTC, AESEQ),
+        condition = !is.na(AESTDTC),
+        set_values_to = exprs(
+          LSTAVLDT = convert_dtc_to_dt(AESTDTC, highest_imputation = 'M'),
+          seq = AESEQ
+        ),
+      ),
+      event(
+        dataset_name = 'ds',
+        order = exprs(DSSTDTC, DSSEQ),
+        condition = !is.na(DSSTDTC),
+        set_values_to = exprs(
+          LSTAVLDT = convert_dtc_to_dt(DSSTDTC, highest_imputation = "M"),
+          seq = DSSEQ
+        ),
+      ),
+      event(
+        dataset_name = "adsl",
+        condition = !is.na(TRTEDTM),
+        set_values_to = exprs(
+          LSTAVLDT = TRTEDTM,
+          seq = 0
+          ),
+      )
+    ),
+    source_datasets = list(vs = vs, ae = ae, ds = ds, adsl = adsl),
+    tmp_event_nr_var = event_nr,
+    order = exprs(LSTAVLDT, seq, event_nr),
+    mode = "last",
+    new_vars = exprs(LSTAVLDT)
+  ) # Note that the spelling of the variable LSTAVLDT is incorrect, the programming 
+    # assignment provided by roche has it listed as "LSTAVLDT" despite CDISC standards
+    # having it as "LSTALVDT", ultimately i followed the assingment worksheet in naming
+    # but in an actual study this is a huge data quality issue if the specs are mis-spelled
+  
   
