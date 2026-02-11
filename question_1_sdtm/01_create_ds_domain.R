@@ -8,6 +8,7 @@
 ### Libraries & Pre-Processing ###
 library(sdtm.oak)
 library(pharmaverseraw)
+library(pharmaversesdtm)
 library(tidyverse)
 
 # Load in raw data
@@ -75,3 +76,18 @@ ds <- assign_no_ct(
     ct_spec = ct,
     ct_clst = 'VISITNUM' # Use CT for VISITNUM mapping
   )
+
+ds <- ds |>
+  mutate(
+    STUDYID = raw_ds$STUDY,
+    DOMAIN = 'DS',
+    USUBJID = paste0("01-", ae_raw$PATNUM),
+    VISITNUM = if_else(
+      grepl('[0-9]', VISITNUM),
+            as.numeric(VISTNUM),
+            NA_integer_
+      )
+  ) 
+
+
+  
