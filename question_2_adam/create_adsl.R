@@ -13,10 +13,18 @@ log_file <- start_log(log_dir = 'question_1_sdtm', prefix = 'q1_log')
 message('Loading in Libraries and Data')
 library(admiral)
 library(pharmaversesdtm)
-library(tidyverse)
+library(dplyr, warn.conflicts = FALSE)
+library(lubridate)
+library(stringr)
 
-pharmaversesdtm::dm
-pharmaversesdtm::vs
-pharmaversesdtm::ex
-pharmaversesdtm::ds
-pharmaversesdtm::ae 
+dm <- pharmaversesdtm::dm
+vs <- pharmaversesdtm::vs
+ex <- pharmaversesdtm::ex
+ds <- pharmaversesdtm::ds
+ae <- pharmaversesdtm::ae 
+
+dm <- convert_blanks_to_na(dm)
+ds <- convert_blanks_to_na(ds)
+ex <- convert_blanks_to_na(ex)
+ae <- convert_blanks_to_na(ae)
+lb <- convert_blanks_to_na(lb)
