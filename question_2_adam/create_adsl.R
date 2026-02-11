@@ -151,7 +151,7 @@ adsl <- adsl |>
     TRTSDTM   = "Datetime of First Exposure to Treatment",
     TRTSTMF   = "Time of First Exposure Imputation Flag",
     TRTEDTM   = "Datetime of Last Exposure to Treatment",
-    TRTEDMF   = "Time of Last Exposure Imputation Flag",
+    TRTETMF   = "Time of Last Exposure Imputation Flag",
     ITTFL     = "Intent-To-Treat Population Flag",
     LSTAVLDT  = "Date Last Known Alive"
   )
@@ -170,6 +170,6 @@ if (length(missing_cols) > 0) {
 stopifnot(nrow(dm) == nrow(adsl))
 
 # Finalize work and save
-save_rds(ds, save_dir = 'question_2_adam', prefix = 'ADSL')
+save_rds(adsl, save_dir = 'question_2_adam', prefix = 'ADSL')
 stop_log()
   
