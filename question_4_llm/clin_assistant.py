@@ -46,20 +46,6 @@ class ClinicalTrialDataAgent:
     and returns filtered subject data.
     """
     
-    # Pattern-based fallback mapping for when LLM is unavailable
-    PATTERN_MAPPING = {
-        "moderate": {"target_column": "AESEV", "filter_value": "MODERATE"},
-        "severe": {"target_column": "AESEV", "filter_value": "SEVERE"},
-        "mild": {"target_column": "AESEV", "filter_value": "MILD"},
-        "cardiac": {"target_column": "AESOC", "filter_value": "CARDIAC DISORDERS"},
-        "skin": {"target_column": "AESOC", "filter_value": "SKIN AND SUBCUTANEOUS TISSUE DISORDERS"},
-        "respiratory": {"target_column": "AESOC", "filter_value": "RESPIRATORY, THORACIC AND MEDIASTINAL DISORDERS"},
-        "headache": {"target_column": "AETERM", "filter_value": "HEADACHE"},
-        "recovered": {"target_column": "AEOUT", "filter_value": "RECOVERED/RESOLVED"},
-        "resolved": {"target_column": "AEOUT", "filter_value": "RECOVERED/RESOLVED"},
-        "serious": {"target_column": "AESER", "filter_value": "Y"},
-    }
-    
     def __init__(self):
         """Initialize the agent with LLM"""
         self.llm = ChatOpenAI(
@@ -67,32 +53,6 @@ class ClinicalTrialDataAgent:
             temperature=0.2,
             api_key=os.getenv("OPENAI_API_KEY")
         )
-    
-    def parse_question_with_fallback(self, question: str) -> Dict[str, Any]:
-        """
-        Try LLM first, fall back to pattern matching if LLM fails.
-        
-        Args:
-            question: Natural language question
-            
-        Returns:
-            Dictionary with target_column and filter_value
-        """
-        # Try LLM first
-        llm_result = self.parse_question(question)
-        if "error" not in llm_result:
-            return llm_result
-        
-        # Fall back to pattern matching
-        question_lower = question.lower()
-        for keyword, mapping in self.PATTERN_MAPPING.items():
-            if keyword in question_lower:
-                return mapping
-        
-        return {
-            "error": "Could not parse question. LLM failed and no pattern matched.",
-            "suggestion": "Try asking about: moderate/severe/mild severity, cardiac/skin/respiratory events, headache, recovered/resolved outcomes, or serious events"
-        }
     
     def parse_question(self, question: str) -> Dict[str, Any]:
         """
@@ -196,15 +156,14 @@ class ClinicalTrialDataAgent:
         Returns:
             Results with subject count and IDs
         """
-        # Step 1: Parse the question (with LLM fallback to pattern matching)
-        parsed = self.parse_question_with_fallback(question)
+        # Step 1: Parse the question using LLM
+        parsed = self.parse_question(question)
         
         if "error" in parsed:
             return {
                 "success": False,
                 "question": question,
-                "error": parsed.get("error"),
-                "suggestion": parsed.get("suggestion")
+                "error": parsed.get("error")
             }
         
         # Step 2: Execute the filter
@@ -219,53 +178,3 @@ class ClinicalTrialDataAgent:
         }
         
         return result
-
-
-if __name__ == "__main__":
-    # Initialize the agent
-    agent = ClinicalTrialDataAgent()
-    
-    # Test Script: 3 Example Queries
-    test_queries = [
-        "Give me the subjects who had Adverse events of Moderate severity",
-        "Which subjects experienced cardiac events?",
-        "Show me all subjects with recovered adverse events"
-    ]
-    
-    print("=" * 80)
-    print("Clinical Trial Data Agent - Test Script")
-    print("=" * 80)
-    
-    for i, query in enumerate(test_queries, 1):
-        print(f"\n{'='*80}")
-        print(f"Query {i}: {query}")
-        print(f"{'='*80}")
-        
-        result = agent.query(query)
-        
-        if result.get("success"):
-            print(f"\n✓ Parsed Intent:")
-            print(f"  - Target Column: {result['parsed_intent']['target_column']}")
-            print(f"  - Filter Value: {result['parsed_intent']['filter_value']}")
-            
-            print(f"\n✓ Results:")
-            print(f"  - Filter Applied: {result['filter_applied']}")
-            print(f"  - Matching Records: {result['matching_records']}")
-            print(f"  - Unique Subjects Count: {result['unique_subjects']}")
-            
-            if result['subject_ids']:
-                print(f"\n✓ Subject IDs ({len(result['subject_ids'])} total):")
-                # Print first 10 subjects
-                for subj_id in result['subject_ids'][:10]:
-                    print(f"    - {subj_id}")
-                if len(result['subject_ids']) > 10:
-                    print(f"    ... and {len(result['subject_ids']) - 10} more")
-            
-            if result.get('sample_data'):
-                print(f"\n✓ Sample Data:")
-                for record in result['sample_data']:
-                    print(f"    {record}")
-        else:
-            print(f"\n✗ Error: {result.get('error')}")
-    
-    print(f"\n{'='*80}\nTest Complete\n{'='*80}")
