@@ -95,3 +95,5 @@ ggsave(
   height = 6,
   dpi = 300
 )
+
+stop_log()

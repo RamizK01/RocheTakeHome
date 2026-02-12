@@ -45,3 +45,5 @@ gt_tbl <- as_gt(tbl)
 
 # Save as PDF
 gt::gtsave(gt_tbl, filename = file_name, path = 'question_3_tlg/summary_table/')
+
+stop_log()
