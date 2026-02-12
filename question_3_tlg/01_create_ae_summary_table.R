@@ -8,7 +8,7 @@
 
 # Create log file for output
 source('utils.R')
-log_file <- start_log(log_dir = 'question_2_adam', prefix = 'q2_log')
+log_file <- start_log(log_dir = 'question_3_tlg/summary_table', prefix = 'q3_viz_log')
 
 ### Libraries & Pre-Processing ###
 message('Loading in Libraries and Data')
