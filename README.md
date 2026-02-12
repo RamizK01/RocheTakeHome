@@ -9,14 +9,14 @@ RocheTakeHome/
 ├── 📄 utils.R                           # Shared R utilities
 ├── 📄 renv.lock                         # R environment lock file
 │
-├── 📁 question_1_sdtm/                  # SDTM Domain Creation (SAS)
+├── 📁 question_1_sdtm/                  # SDTM Domain Creation 
 │   ├── 01_create_ds_domain.R            # Create DS domain dataset
 │   ├── sdtm_ct.csv                      # Controlled terminology
 │   ├── DS_20260211_163515.Rds           # Output: DS domain
 │   └── q1_log_20260211_163457.txt       # Execution log
 │
 ├── 📁 question_2_adam/                  # ADaM Dataset Creation
-│   ├── create_adsl.R                    # Create ADSL (Subject-Level) dataset
+│   ├── create_adsl.R                    # Create ADSL dataset
 │   ├── ADSL_20260211_185452.Rds         # Output: ADSL dataset
 │   └── q2_log_20260211_185449.txt       # Execution log
 │
@@ -36,8 +36,6 @@ RocheTakeHome/
 │   ├── 📓 example_queries.ipynb         # Interactive examples (3 queries)
 │   ├── ae.csv                           # Adverse events input data
 │   ├── environment.yml                  # Conda environment definition
-│   ├── .env.example                     # API key template
-│   └── __pycache__/                     # Python cache
 │
 └── 📁 renv/                             # R environment configuration
     ├── activate.R                       # Environment activation script
