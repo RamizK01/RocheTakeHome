@@ -1,0 +1,63 @@
+
+==============================
+Log started: 2026-02-11 21:35:12 
+==============================
+
+
+> ### Libraries & Pre-Processing ###
+> message('Loading in Libraries and Data')
+G3;Loading in Libraries and Data
+g
+> library(pharmaverseadam)
+
+> library(ggplot2)
+
+> library(dplyr)
+
+> adae <- pharmaverseadam::adae
+
+> ### SEVERITY BAR PLOT ###
+> severity_plot <- adae |>
++   ggplot(aes(x = ACTARM, fill = AESEV)) +
++   geom_bar() +
++   labs(title = 'AE severity dist .... [TRUNCATED] 
+
+> ggsave(
++   filename = file.path("question_3_tlg/visualizations", paste0("severity_plot", timestamp, ".png")),
++   plot = severity_plot,
++   width = .... [TRUNCATED] 
+
+> ### TOP 10 COMMON AEs ###
+> num_pts <- n_distinct(adae$USUBJID)
+
+> # First summarise top AEs 
+> ae_sum <- adae |>
++   # First remove any AETERMS that show twice for the same pt 
++   group_by(USUBJID) |>
++   distinct .... [TRUNCATED] 
+
+> # Create binomial conf intervals based on counts
+> ci_results <- binom::binom.confint(
++   x = ae_sum$count,
++   n = num_pts,
++   methods = "exact"  .... [TRUNCATED] 
+
+> # add conf intervals to dataframe and convert to pcts
+> ae_sum <- ae_sum |> 
++   bind_cols(ci_results |> select(lower, upper)) |>
++   mutate(across( .... [TRUNCATED] 
+
+> # Create plot 
+> freq_plot <- ae_sum |>
++   # factorize aeterm so that it displays descending order in plot
++   mutate(AETERM = forcats::fct_reorder .... [TRUNCATED] 
+
+> timestamp <- format(Sys.time(), "%Y%m%d_%H%M%S")
+
+> ggsave(
++   filename = file.path("question_3_tlg/visualizations", paste0("freq_plot_", timestamp, ".png")),
++   plot = freq_plot,
++   width = 8,
++   .... [TRUNCATED] 
+
+> stop_log()

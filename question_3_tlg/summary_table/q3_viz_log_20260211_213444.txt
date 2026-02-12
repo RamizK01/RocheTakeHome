@@ -1,0 +1,44 @@
+
+==============================
+Log started: 2026-02-11 21:34:44 
+==============================
+
+
+> ### Libraries & Pre-Processing ###
+> message('Loading in Libraries and Data')
+G3;Loading in Libraries and Data
+g
+> library(pharmaverseadam)
+
+> library(gtsummary)
+
+> adsl <- pharmaverseadam::adsl
+
+> adae <- pharmaverseadam::adae
+
+> adae <- adae |>
++   filter(
++     # Question does not state for the safety population but it is common practice
++     SAFFL == 'Y',
++     # Filter t .... [TRUNCATED] 
+
+> tbl <- adae |>
++   tbl_hierarchical(
++     variables = c(AESOC, AETERM),
++     by = ACTARM,
++     id = USUBJID,
++     denominator = adsl,
++     over .... [TRUNCATED] 
+
+> timestamp <- format(Sys.time(), "%Y%m%d_%H%M%S")
+
+> file_name <- paste0("adae_summary_", timestamp, ".pdf")
+
+> # Convert gtsummary table to gt object
+> gt_tbl <- as_gt(tbl)
+
+> # Save as PDF
+> gt::gtsave(gt_tbl, filename = file_name, path = 'question_3_tlg/summary_table/')
+G3;file:///C:/Users/ramiz/AppData/Local/Temp/Rtmp0MIgFj/filee503dba3224.html screenshot completed
+g
+> stop_log()
